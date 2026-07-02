@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>NetScan - Network Scanner</title>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{--green:#00ff88;--cyan:#00d4ff;--bg:#0a0e14;--card:#111820;--text:#e0e0e0;--dim:#556677}
+@media(prefers-reduced-motion:reduce){*,*::before,*::after{animation-duration:0.01ms!important;transition-duration:0.01ms!important}}
+body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);overflow-x:hidden}
+a{color:var(--green);text-decoration:none}
+.hero{min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;position:relative;overflow:hidden;padding:2rem}
+.hero::before{content:'';position:absolute;width:600px;height:600px;background:radial-gradient(circle,rgba(0,255,136,.08),transparent 70%);animation:pulse 4s ease-in-out infinite}
+@keyframes pulse{0%,100%{transform:scale(1);opacity:.6}50%{transform:scale(1.2);opacity:1}}
+@keyframes fadeInUp{from{opacity:0;transform:translateY(40px)}to{opacity:1;transform:translateY(0)}}
+@keyframes typing{from{width:0}to{width:100%}}
+@keyframes blink{50%{border-color:transparent}}
+@keyframes scanLine{0%{width:0}100%{width:100%}}
+@keyframes fadeIn{from{opacity:0}to{opacity:1}}
+@keyframes portPulse{0%{transform:scale(1);opacity:1}100%{transform:scale(1.5);opacity:0}}
+.hero h1{font-family:'JetBrains Mono',monospace;font-size:clamp(2.5rem,6vw,5rem);background:linear-gradient(135deg,var(--green),var(--cyan));-webkit-background-clip:text;-webkit-text-fill-color:transparent;animation:fadeInUp .8s ease-out both;margin-bottom:1rem}
+.hero p{font-size:1.2rem;color:var(--dim);animation:fadeInUp .8s ease-out .2s both;max-width:500px;text-align:center}
+.badge{display:inline-block;margin-top:1.5rem;padding:.5rem 1.5rem;border:1px solid var(--green);border-radius:999px;font-size:.85rem;color:var(--green);animation:fadeInUp .8s ease-out .4s both;font-family:'JetBrains Mono',monospace}
+.terminal-wrap{max-width:700px;width:90%;margin:4rem auto;animation:fadeInUp .8s ease-out .6s both}
+.terminal{background:#0d1117;border:1px solid #1e2a3a;border-radius:12px;overflow:hidden}
+.terminal-bar{display:flex;gap:6px;padding:12px 16px;background:#161b22;border-bottom:1px solid #1e2a3a}
+.terminal-bar span{width:12px;height:12px;border-radius:50%}
+.terminal-bar span:nth-child(1){background:#ff5f57}
+.terminal-bar span:nth-child(2){background:#febc2e}
+.terminal-bar span:nth-child(3){background:#28c840}
+.terminal-body{padding:1.2rem;font-family:'JetBrains Mono',monospace;font-size:.85rem;line-height:1.8;min-height:160px}
+.terminal-body .line{display:block;overflow:hidden;white-space:nowrap;animation:typing 1.5s steps(40) both}
+.terminal-body .line:nth-child(1){animation-delay:1s}
+.terminal-body .line:nth-child(2){animation-delay:2.5s}
+.terminal-body .line:nth-child(3){animation-delay:4s}
+.terminal-body .line:nth-child(4){animation-delay:5.5s}
+.terminal-body .line:nth-child(5){animation-delay:7s}
+.terminal-body .line:nth-child(6){animation-delay:8.5s}
+.prompt{color:var(--green)}
+.info{color:var(--cyan)}
+.warn{color:#febc2e}
+.err{color:#ff5f57}
+.scan-vis{max-width:800px;width:90%;margin:4rem auto;text-align:center}
+.scan-vis h2{font-size:1.5rem;margin-bottom:2rem;animation:fadeInUp .8s ease-out both}
+.scan-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(80px,1fr));gap:12px}
+.port-box{background:var(--card);border:1px solid #1e2a3a;border-radius:8px;padding:10px 6px;font-family:'JetBrains Mono',monospace;font-size:.7rem;transition:all .3s ease;position:relative;overflow:hidden;animation:fadeIn .5s ease-out both}
+.port-box:hover{border-color:var(--green);box-shadow:0 0 20px rgba(0,255,136,.15);transform:translateY(-2px)}
+.port-box .num{display:block;color:var(--cyan);font-weight:700}
+.port-box .state{display:block;margin-top:4px;font-size:.6rem;text-transform:uppercase;letter-spacing:1px}
+.port-box.open .state{color:var(--green)}
+.port-box.closed .state{color:var(--dim)}
+.port-box.filtered .state{color:#febc2e}
+.port-box::after{content:'';position:absolute;top:0;left:0;width:100%;height:2px;background:var(--green);animation:scanLine 1.5s ease-in-out infinite alternate;animation-delay:var(--d,0s)}
+.features{max-width:1000px;width:90%;margin:4rem auto;display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:1.5rem}
+.feature-card{background:var(--card);border:1px solid #1e2a3a;border-radius:16px;padding:2rem;transition:all .35s ease;position:relative;overflow:hidden;animation:fadeInUp .6s ease-out both}
+.feature-card:nth-child(2){animation-delay:.15s}
+.feature-card:nth-child(3){animation-delay:.3s}
+.feature-card:nth-child(4){animation-delay:.45s}
+.feature-card::before{content:'';position:absolute;top:-50%;left:-50%;width:200%;height:200%;background:conic-gradient(from 0deg,transparent,rgba(0,255,136,.06),transparent 30%);animation:rotate 6s linear infinite;opacity:0;transition:opacity .3s}
+.feature-card:hover::before{opacity:1}
+@keyframes rotate{to{transform:rotate(360deg)}}
+.feature-card:hover{border-color:rgba(0,255,136,.3);transform:translateY(-4px);box-shadow:0 12px 40px rgba(0,255,136,.08)}
+.feature-icon{font-size:2rem;margin-bottom:1rem}
+.feature-card h3{font-size:1.1rem;margin-bottom:.5rem}
+.feature-card p{color:var(--dim);font-size:.9rem;line-height:1.6}
+footer{text-align:center;padding:3rem 1rem;border-top:1px solid #1e2a3a;color:var(--dim);font-size:.85rem}
+footer a{color:var(--green);border-bottom:1px solid rgba(0,255,136,.3)}
+</style>
+</head>
+<body>
+<section class="hero">
+<h1>&gt; NetScan_</h1>
+<p>Lightweight network reconnaissance &amp; port scanner built for speed, accuracy, and stealth.</p>
+<div class="badge">Open Source &bull; MIT License</div>
+</section>
+
+<section class="terminal-wrap">
+<div class="terminal">
+<div class="terminal-bar"><span></span><span></span><span></span></div>
+<div class="terminal-body" id="term"></div>
+</div>
+</section>
+
+<section class="scan-vis">
+<h2>Live Scan Visualization</h2>
+<div class="scan-grid" id="portGrid"></div>
+</section>
+
+<section class="features">
+<div class="feature-card">
+<div class="feature-icon">&#9881;</div>
+<h3>Multi-Threaded</h3>
+<p>Scans thousands of ports in seconds with configurable concurrency and connection pooling.</p>
+</div>
+<div class="feature-card">
+<div class="feature-icon">&#128737;</div>
+<h3>Stealth Mode</h3>
+<p>TCP SYN scans, fragmented packets, and decoy support for low-detection reconnaissance.</p>
+</div>
+<div class="feature-card">
+<div class="feature-icon">&#128202;</div>
+<h3>Service Detection</h3>
+<p>Identifies running services, versions, and banners on open ports automatically.</p>
+</div>
+<div class="feature-card">
+<div class="feature-icon">&#128196;</div>
+<h3>Export Results</h3>
+<p>Save findings to JSON, XML, CSV, or Markdown reports for easy integration with other tools.</p>
+</div>
+</section>
+
+<footer>
+<p>Built for the community &bull; <a href="https://github.com" target="_blank">View on GitHub</a></p>
+</footer>
+
+<script>
+const termEl = document.getElementById('term');
+const lines = [
+  '<span class="prompt">$ netscan --target 192.168.1.0/24 --top-ports 1000</span>',
+  '<span class="info">[*] Starting scan on 192.168.1.0/24 (256 hosts)...</span>',
+  '<span class="warn">[!] Port 22/tcp  - ssh    - Open (2.1ms)</span>',
+  '<span class="warn">[!] Port 80/tcp  - http   - Open (1.8ms)</span>',
+  '<span class="info">[*] Port 443/tcp - https  - Filtered (5.2ms)</span>',
+  '<span class="info">[+] Scan complete. 12 open | 3 filtered | 985 closed</span>'
+];
+let li = 0;
+function addLine() {
+  if (li < lines.length) {
+    termEl.innerHTML += '<span class="line" style="animation-delay:' + (li * 1.5 + 1) + 's">' + lines[li] + '</span>';
+    li++;
+    setTimeout(addLine, 1500);
+  }
+}
+const observed = new IntersectionObserver(e => { if (e[0].isIntersecting) { addLine(); observed.disconnect(); } });
+observed.observe(document.querySelector('.terminal-wrap'));
+
+const grid = document.getElementById('portGrid');
+const ports = [21,22,23,25,53,80,110,143,443,445,993,995,3306,3389,5432,8080,8443,27017];
+ports.forEach((p, i) => {
+  const states = ['open','closed','filtered'];
+  const s = states[Math.floor(Math.random() * 3)];
+  const box = document.createElement('div');
+  box.className = 'port-box ' + s;
+  box.style.setProperty('--d', (i * 0.3) + 's');
+  box.innerHTML = '<span class="num">' + p + '</span><span class="state">' + s + '</span>';
+  box.style.animationDelay = (i * 0.08) + 's';
+  grid.appendChild(box);
+});
+</script>
+</body>
+</html>

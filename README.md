@@ -7,7 +7,7 @@
 ![Issues](https://img.shields.io/badge/Issues-Welcome-blue?style=for-the-badge)
 ![Stars](https://img.shields.io/github/stars/ykrishhh/network-scanner?style=for-the-badge&color=yellow)
 
-A high-performance Python network scanner for security auditing, port scanning, service detection, and OS fingerprinting. Built for security researchers and penetration testers.
+A Python network scanner I built for pentests and security audits. Does port scanning, service detection, OS fingerprinting, and network discovery — all in one tool.
 
 **Keywords**: `network-scanner` `port-scanner` `python` `security` `nmap` `network-security` `penetration-testing` `cybersecurity` `scapy` `socket`
 
@@ -15,6 +15,7 @@ A high-performance Python network scanner for security auditing, port scanning, 
 
 ## Table of Contents
 
+- [Why This Exists](#why-this-exists)
 - [Features](#features)
 - [Installation](#installation)
 - [Usage](#usage)
@@ -27,6 +28,12 @@ A high-performance Python network scanner for security auditing, port scanning, 
 - [Contributing](#contributing)
 - [Disclaimer](#disclaimer)
 - [License](#license)
+
+---
+
+## Why This Exists
+
+I got tired of bouncing between nmap, masscan, and custom scripts during engagements. This bundles the scanning techniques I actually use into one place. It won't replace nmap for everything, but for quick recon and port enumeration it's fast and gets out of your way.
 
 ---
 
@@ -114,6 +121,8 @@ sudo python scanner.py -t 192.168.1.1 -sU -p 53,123,161 --timeout 5
 # Export results to JSON
 sudo python scanner.py -t 192.168.1.1 -o json -f results.json
 ```
+
+I use the SYN scan + service detection combo on pretty much every engagement. The trick is setting `--timeout 5` on UDP scans — most systems rate-limit ICMP port-unreachable, so you need to wait a bit or you'll miss open ports.
 
 ---
 
@@ -494,6 +503,8 @@ Scanner -> RST     -> Target   (connection torn down)
 
 Sends empty datagrams. Slow because most systems rate-limit ICMP port-unreachable messages. Useful for DNS (53), SNMP (161), and NTP (123).
 
+Most people skip UDP scans because they're slow. I don't. Half the interesting services on internal networks (DNS, SNMP, NTP) live on UDP, and you'll miss them if you only do TCP.
+
 ### ACK Scan (`-sA`)
 
 Probes firewall rules by checking whether packets are filtered or returned with RST.
@@ -534,6 +545,8 @@ Operates by analyzing TCP window size, TTL values, and option field patterns in 
 | macOS     | 64          | 65535              |
 | Cisco IOS | 255         | 4128, 65535        |
 | FreeBSD   | 64          | 65535              |
+
+This is basic fingerprinting — good enough for most engagements. If you need something more precise, feed the results into nmap's `-O` for deeper analysis.
 
 ---
 
